@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unity WebGL Server</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0d0d1a 100%);
+            color: #e4e4e7;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(74, 222, 222, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(168, 85, 247, 0.08) 0%, transparent 40%);
+            animation: float 20s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(5deg); }
+            66% { transform: translate(-20px, 20px) rotate(-5deg); }
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            border-radius: 28px;
+            margin-bottom: 32px;
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3),
+                        0 0 80px rgba(139, 92, 246, 0.2);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3), 0 0 80px rgba(139, 92, 246, 0.2); }
+            50% { transform: scale(1.02); box-shadow: 0 25px 50px rgba(99, 102, 241, 0.4), 0 0 100px rgba(139, 92, 246, 0.3); }
+        }
+        
+        .logo svg {
+            width: 50px;
+            height: 50px;
+            fill: white;
+        }
+        
+        h1 {
+            font-size: 2.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #a1a1aa;
+            font-weight: 400;
+        }
+        
+        /* Status Card */
+        .status-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .status-indicator {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+        }
+        
+        .status-indicator svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+        
+        .status-text h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+        
+        .status-text p {
+            color: #71717a;
+            font-size: 0.95rem;
+        }
+        
+        /* Instructions */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #a1a1aa;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 20px;
+        }
+        
+        .steps {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+        
+        .step {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .step:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(8px);
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #a78bfa;
+            flex-shrink: 0;
+        }
+        
+        .step-content h4 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 6px;
+        }
+        
+        .step-content p {
+            color: #71717a;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        /* Files Card */
+        .files-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 32px;
+        }
+        
+        .files-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .files-header svg {
+            width: 24px;
+            height: 24px;
+            fill: #6366f1;
+        }
+        
+        .files-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        
+        .file-tree {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 20px 24px;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+        
+        .file-tree .folder {
+            color: #6366f1;
+        }
+        
+        .file-tree .file {
+            color: #a1a1aa;
+        }
+        
+        .file-tree .required {
+            color: #22c55e;
+        }
+
+        /* Build Links */
+        .builds-section {
+            margin-bottom: 40px;
+        }
+
+        .build-links {
+            display: grid;
+            gap: 12px;
+        }
+
+        .build-link {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 16px;
+            padding: 20px 24px;
+            text-decoration: none;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .build-link:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+            border-color: rgba(139, 92, 246, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.2);
+        }
+
+        .build-link svg {
+            width: 32px;
+            height: 32px;
+            fill: #a78bfa;
+        }
+
+        .build-link-text h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .build-link-text p {
+            font-size: 0.85rem;
+            color: #71717a;
+        }
+
+        .arrow {
+            margin-left: auto;
+            font-size: 1.5rem;
+            color: #6366f1;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        
+        .footer p {
+            color: #52525b;
+            font-size: 0.85rem;
+        }
+        
+        .footer a {
+            color: #6366f1;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .footer a:hover {
+            color: #818cf8;
+        }
+        
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container {
+                padding: 40px 16px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .status-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .step {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .build-link {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .arrow {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18-.21 0-.41-.06-.57-.18l-7.9-4.44A.991.991 0 0 1 3 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18.21 0 .41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9zM12 4.15L5 8.09v7.82l7 3.94l7-3.94V8.09l-7-3.94z"/>
+                </svg>
+            </div>
+            <h1>Unity WebGL Server</h1>
+            <p class="subtitle">Ready to serve your 3D experience</p>
+        </header>
+        
+        <div class="status-card">
+            <div class="status-indicator">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+            </div>
+            <div class="status-text">
+                <h3>Server Running</h3>
+                <p>Your Unity WebGL builds are ready to launch</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Available Builds</h2>
+        
+        <div class="builds-section">
+            <div class="build-links">
+                <a href="./3D_B08/" class="build-link">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18-.21 0-.41-.06-.57-.18l-7.9-4.44A.991.991 0 0 1 3 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18.21 0 .41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9z"/>
+                    </svg>
+                    <div class="build-link-text">
+                        <h4>3D Building (3D_B08)</h4>
+                        <p>Click to launch the 3D building experience</p>
+                    </div>
+                    <span class="arrow">→</span>
+                </a>
+            </div>
+        </div>
+        
+        <h2 class="section-title">Add More Builds</h2>
+        
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>Build Your Unity Project</h4>
+                    <p>In Unity, go to File → Build Settings, select WebGL platform, configure your settings, and click Build.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>Copy Build Files</h4>
+                    <p>Move the entire contents of your Unity WebGL build output into the <strong>Build</strong> folder.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>Refresh This Page</h4>
+                    <p>Once your files are in place, refresh this page to see your new build listed above.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="files-card">
+            <div class="files-header">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                </svg>
+                <h3>Expected File Structure</h3>
+            </div>
+            <div class="file-tree">
+                <span class="folder">Build/</span><br>
+                &nbsp;&nbsp;├── <span class="required">index.html</span> (this page)<br>
+                &nbsp;&nbsp;├── <span class="folder">3D_B08/</span> ✓<br>
+                &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <span class="file">(your build files)</span><br>
+                &nbsp;&nbsp;└── <span class="folder">AnotherBuild/</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── <span class="file">(more build files)</span>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <p>Python Unity WebGL Server • <a href="https://docs.unity3d.com/Manual/webgl-building.html" target="_blank">Unity WebGL Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
